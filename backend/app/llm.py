@@ -1,13 +1,27 @@
-import google.generativeai as genai
 import os
+from mistralai import Mistral
 from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+api_key = os.getenv("MISTRAL_API_KEY")
 
-# ✅ Updated model
-MODEL = genai.GenerativeModel("gemini-2.5-flash")
+client = Mistral(api_key=api_key)
+
+# ✅ Fast + cheap model
+MODEL_NAME = "mistral-small-latest"
+
+
+def generate(prompt: str) -> str:
+    response = client.chat.complete(
+        model=MODEL_NAME,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": prompt},
+        ],
+    )
+    return response.choices[0].message.content
+
 
 SYSTEM_PROMPT = """
 You are an AI customer support agent.
@@ -17,13 +31,6 @@ You must:
 - Extract order_id if present
 - Decide which tool to call
 
-Available tools:
-- get_order(order_id)
-- get_customer(email)
-- check_refund_eligibility(order_id)
-- escalate_ticket(reason)
-
-IMPORTANT:
 Respond ONLY in JSON format:
 
 {
@@ -31,9 +38,4 @@ Respond ONLY in JSON format:
   "parameters": {},
   "response": ""
 }
-
-Rules:
-- NEVER guess data
-- ALWAYS call tools when needed
-- DO NOT return raw tool data
 """

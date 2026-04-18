@@ -33,7 +33,9 @@ export default function Home() {
 
     const aiMessage: Message = {
       role: "ai",
-      text: data.response || "Error"
+      text: typeof data === "string"
+      ? data
+      : data.response || data.error || JSON.stringify(data)
     }
 
     setMessages(prev => [...prev, aiMessage])

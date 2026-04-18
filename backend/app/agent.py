@@ -1,14 +1,14 @@
 import json
-from app.llm import MODEL, SYSTEM_PROMPT
+from app.llm import generate
 from app.tools.tool_registry import TOOLS
 
-# 🧠 In-memory chat memory
+# 🧠 In-memory session memory
 chat_memory = {}
 
 
 def clean_llm_output(text: str):
     """
-    Removes markdown formatting like ```json ... ```
+    Remove markdown formatting if present
     """
     text = text.strip()
 
@@ -20,20 +20,20 @@ def clean_llm_output(text: str):
 
 def run_agent(user_input: str, session_id: str = "default"):
     try:
-        # 🧠 LOAD MEMORY
+        # 🧠 Load memory
         history = chat_memory.get(session_id, [])
         history_text = "\n".join(history)
 
-        # 🔹 STEP 1: Ask LLM what to do
-        prompt = SYSTEM_PROMPT + f"""
+        # 🔹 STEP 1 — Ask LLM what to do
+        prompt = f"""
 Conversation history:
 {history_text}
 
 User: {user_input}
 """
 
-        response = MODEL.generate_content(prompt)
-        text = clean_llm_output(response.text)
+        raw_text = generate(prompt)
+        text = clean_llm_output(raw_text)
 
         try:
             data = json.loads(text)
@@ -45,7 +45,7 @@ User: {user_input}
 
         action = data.get("action")
 
-        # 🔹 STEP 2: TOOL CALL
+        # 🔹 STEP 2 — Tool execution
         if action in TOOLS:
             tool_fn = TOOLS[action]
 
@@ -54,7 +54,7 @@ User: {user_input}
             except Exception as e:
                 return {"error": f"Tool execution failed: {str(e)}"}
 
-            # 🔥 STEP 3: FINAL RESPONSE (LLM INTERPRETATION)
+            # 🔥 STEP 3 — Final response generation
             final_prompt = f"""
 You are a customer support AI.
 
@@ -72,16 +72,13 @@ Now generate a FINAL response.
 Rules:
 - Do NOT return JSON
 - Do NOT show raw data
-- Be polite and human-friendly
+- Be clear and human-friendly
 - Follow company policy
-- If information is missing, ask the user instead of assuming
-- Clearly state decision (approved / rejected / needs more info)
+- If info missing → ask user
 """
 
-            final_response = MODEL.generate_content(final_prompt)
-            final_text = final_response.text.strip()
+            final_text = generate(final_prompt).strip()
 
-        # 🔹 STEP 4: DIRECT FINAL
         elif action == "final":
             final_text = data.get("response", "No response generated")
 
@@ -91,28 +88,8 @@ Rules:
                 "raw": data
             }
 
-        # 📊 STEP 5: CONFIDENCE SCORE
-        confidence_prompt = f"""
-Evaluate confidence of this response.
-
-User: {user_input}
-Response: {final_text}
-
-Return ONLY a number between 0 and 1.
-"""
-
-        confidence_raw = MODEL.generate_content(confidence_prompt).text.strip()
-
-        try:
-            confidence = float(confidence_raw)
-        except:
-            confidence = 0.5
-
-        # 🚨 STEP 6: ESCALATION LOGIC
+        # 🚨 STEP 4 — Escalation logic
         should_escalate = False
-
-        if confidence < 0.6:
-            should_escalate = True
 
         if any(word in user_input.lower() for word in ["broken", "defect", "warranty"]):
             should_escalate = True
@@ -127,7 +104,7 @@ Return ONLY a number between 0 and 1.
                 "Complex issue requires human review"
             )
 
-        # 🧠 STEP 7: SAVE MEMORY
+        # 🧠 STEP 5 — Save memory
         history.append(f"User: {user_input}")
         history.append(f"AI: {final_text}")
 
@@ -136,7 +113,7 @@ Return ONLY a number between 0 and 1.
         # 🔥 FINAL OUTPUT
         return {
             "response": final_text,
-            "confidence": confidence,
+            "confidence": 0.8,  # static for now (no extra API call)
             "escalation": escalation_data
         }
 
