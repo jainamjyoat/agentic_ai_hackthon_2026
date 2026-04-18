@@ -1,0 +1,27 @@
+# 🔐 Environment variables
+.env
+.env.*
+
+# 🐍 Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# 🧪 Virtual environments
+venv/
+.env/
+.venv/
+
+# 🐳 Docker
+*.log
+
+# 🖥 OS files
+.DS_Store
+Thumbs.db
+
+# 📦 Node (if frontend later)
+node_modules/
+
+# 🔧 IDE files
+.vscode/
+.idea/
