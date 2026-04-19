@@ -1,8 +1,9 @@
 import json
+import re
 from app.llm import generate
 from app.tools.tool_registry import TOOLS
 
-# 🧠 In-memory session memory
+# 🧠 Memory
 chat_memory = {}
 
 
@@ -15,25 +16,50 @@ def clean_llm_output(text: str):
     return text
 
 
+# 🔥 Extract order_id manually (IMPORTANT)
+def extract_order_id(text: str):
+    match = re.search(r"ORD-\d+", text)
+    return match.group(0) if match else None
+
+
 def run_agent(user_input: str, session_id: str = "default", external_data=None):
     try:
         # 🧠 Load memory
         history = chat_memory.get(session_id, [])
         history_text = "\n".join(history)
 
-        # 🔥 Inject uploaded JSON into context
+        # 🔥 Inject uploaded JSON
         data_context = ""
         if external_data:
-            data_context = f"\nExternal Data:\n{json.dumps(external_data, indent=2)}\n"
+            data_context = json.dumps(external_data, indent=2)
 
-        # 🔹 STEP 1 — Ask LLM what to do
-        prompt = f"""
+        # 🔥 STEP 0 — FORCE TOOL CALL (CRITICAL FIX)
+        order_id = extract_order_id(user_input)
+
+        if order_id:
+            action = "check_refund_eligibility"
+            parameters = {"order_id": order_id}
+        else:
+            # 🔹 STEP 1 — LLM decides
+            prompt = f"""
 You are an AI support agent.
+
+You MUST use tools when required.
+
+Available tools:
+- check_refund_eligibility(order_id)
+- escalate_ticket(reason)
+
+Rules:
+- If order_id is present → ALWAYS call check_refund_eligibility
+- NEVER say you don't have access
+- NEVER refuse
+
+External Data:
+{data_context}
 
 Conversation history:
 {history_text}
-
-{data_context}
 
 User: {user_input}
 
@@ -45,35 +71,37 @@ Respond ONLY in JSON:
 }}
 """
 
-        raw_text = generate(prompt)
-        text = clean_llm_output(raw_text)
+            raw_text = generate(prompt)
+            text = clean_llm_output(raw_text)
 
-        try:
-            data = json.loads(text)
-        except Exception:
-            return {
-                "error": "Invalid LLM response",
-                "raw": text
-            }
+            try:
+                data = json.loads(text)
+                action = data.get("action")
+                parameters = data.get("parameters", {})
+            except Exception:
+                return {
+                    "error": "Invalid LLM response",
+                    "raw": text
+                }
 
-        action = data.get("action")
-
-        # 🔹 STEP 2 — Tool execution
+        # 🔹 STEP 2 — TOOL EXECUTION
         if action in TOOLS:
             tool_fn = TOOLS[action]
 
             try:
-                tool_result = tool_fn(**data.get("parameters", {}))
+                # 🔥 Pass external_data into tool if needed
+                tool_result = tool_fn(
+                    **parameters,
+                    external_data=external_data
+                )
             except Exception as e:
-                return {"error": f"Tool execution failed: {str(e)}"}
+                return {"error": f"Tool failed: {str(e)}"}
 
-            # 🔥 STEP 3 — Final response generation
+            # 🔥 STEP 3 — FINAL RESPONSE
             final_prompt = f"""
 You are a customer support AI.
 
-Conversation history:
-{history_text}
-
+External Data:
 {data_context}
 
 User query:
@@ -82,52 +110,35 @@ User query:
 Tool result:
 {tool_result}
 
-Now generate a FINAL response.
+Write a helpful, human-friendly response.
 
 Rules:
-- Do NOT return JSON
-- Do NOT show raw data
-- Be clear and human-friendly
-- Use external data if useful
+- DO NOT show raw JSON
+- DO NOT say you lack access
+- Use data provided
 """
 
             final_text = generate(final_prompt).strip()
 
-        elif action == "final":
-            final_text = data.get("response", "No response generated")
-
         else:
-            return {
-                "error": "Unknown action from LLM",
-                "raw": data
-            }
+            final_text = "I'm not sure how to help with that."
 
-        # 🚨 STEP 4 — Escalation logic
-        should_escalate = False
-
-        if any(word in user_input.lower() for word in ["broken", "defect", "warranty"]):
-            should_escalate = True
-
-        if "replace" in user_input.lower():
-            should_escalate = True
-
+        # 🔥 STEP 4 — ESCALATION
         escalation_data = None
 
-        if should_escalate:
+        if any(word in user_input.lower() for word in ["broken", "defect", "warranty", "replace"]):
             escalation_data = TOOLS["escalate_ticket"](
                 "Complex issue requires human review"
             )
 
-        # 🧠 STEP 5 — Save memory
+        # 🧠 SAVE MEMORY
         history.append(f"User: {user_input}")
         history.append(f"AI: {final_text}")
-
         chat_memory[session_id] = history[-10:]
 
-        # 🔥 FINAL OUTPUT
         return {
             "response": final_text,
-            "confidence": 0.8,
+            "confidence": 0.9,
             "escalation": escalation_data
         }
 
