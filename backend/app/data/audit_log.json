@@ -1,0 +1,246 @@
+[
+  {
+    "ticket_id": 1,
+    "user_query": "refund for ORD-777",
+    "extracted_order_id": "ORD-777",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "eligible"
+    },
+    "final_decision": "Refund eligible",
+    "confidence": 0.9,
+    "escalation": false
+  },
+  {
+    "ticket_id": 2,
+    "user_query": "refund for ORD-888",
+    "extracted_order_id": "ORD-888",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "not eligible",
+      "reason": "Return window expired"
+    },
+    "final_decision": "Refund denied",
+    "confidence": 0.92,
+    "escalation": false
+  },
+  {
+    "ticket_id": 3,
+    "user_query": "refund for ORD-999",
+    "extracted_order_id": "ORD-999",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "not eligible",
+      "reason": "Product not returnable"
+    },
+    "final_decision": "Refund denied",
+    "confidence": 0.91,
+    "escalation": false
+  },
+  {
+    "ticket_id": 4,
+    "user_query": "refund for ORD-555",
+    "extracted_order_id": "ORD-555",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "not eligible",
+      "reason": "Not delivered"
+    },
+    "final_decision": "Refund denied",
+    "confidence": 0.9,
+    "escalation": false
+  },
+  {
+    "ticket_id": 5,
+    "user_query": "my coffee maker is broken",
+    "extracted_order_id": null,
+    "action": "escalate_ticket",
+    "tool_called": true,
+    "tool_result": {
+      "status": "ticket_created"
+    },
+    "final_decision": "Escalated to human",
+    "confidence": 0.88,
+    "escalation": true
+  },
+  {
+    "ticket_id": 6,
+    "user_query": "refund for ORD-777",
+    "action": "process_refund",
+    "tool_called": true,
+    "tool_result": {
+      "status": "refund_initiated"
+    },
+    "final_decision": "Refund processed",
+    "confidence": 0.95,
+    "escalation": false
+  },
+  {
+    "ticket_id": 7,
+    "user_query": "where is my order ORD-123",
+    "action": "get_order",
+    "tool_called": true,
+    "tool_result": {
+      "status": "not found"
+    },
+    "final_decision": "Order not found",
+    "confidence": 0.85,
+    "escalation": false
+  },
+  {
+    "ticket_id": 8,
+    "user_query": "refund ORD-777",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "eligible"
+    },
+    "final_decision": "Refund eligible",
+    "confidence": 0.9,
+    "escalation": false
+  },
+  {
+    "ticket_id": 9,
+    "user_query": "cancel my order ORD-200",
+    "action": "final",
+    "tool_called": false,
+    "tool_result": null,
+    "final_decision": "Unsupported action",
+    "confidence": 0.7,
+    "escalation": false
+  },
+  {
+    "ticket_id": 10,
+    "user_query": "refund for ORD-777",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "eligible"
+    },
+    "final_decision": "Refund eligible",
+    "confidence": 0.9,
+    "escalation": false
+  },
+  {
+    "ticket_id": 11,
+    "user_query": "product damaged",
+    "action": "escalate_ticket",
+    "tool_called": true,
+    "tool_result": {
+      "status": "ticket_created"
+    },
+    "final_decision": "Escalated",
+    "confidence": 0.88,
+    "escalation": true
+  },
+  {
+    "ticket_id": 12,
+    "user_query": "refund for ORD-888",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "not eligible"
+    },
+    "final_decision": "Refund denied",
+    "confidence": 0.91,
+    "escalation": false
+  },
+  {
+    "ticket_id": 13,
+    "user_query": "return my product ORD-999",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "not eligible"
+    },
+    "final_decision": "Return denied",
+    "confidence": 0.9,
+    "escalation": false
+  },
+  {
+    "ticket_id": 14,
+    "user_query": "I want replacement",
+    "action": "escalate_ticket",
+    "tool_called": true,
+    "tool_result": {
+      "status": "ticket_created"
+    },
+    "final_decision": "Escalated",
+    "confidence": 0.87,
+    "escalation": true
+  },
+  {
+    "ticket_id": 15,
+    "user_query": "refund ORD-555",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "not eligible"
+    },
+    "final_decision": "Refund denied",
+    "confidence": 0.89,
+    "escalation": false
+  },
+  {
+    "ticket_id": 16,
+    "user_query": "track order ORD-777",
+    "action": "get_order",
+    "tool_called": true,
+    "tool_result": {
+      "status": "delivered"
+    },
+    "final_decision": "Order delivered",
+    "confidence": 0.9,
+    "escalation": false
+  },
+  {
+    "ticket_id": 17,
+    "user_query": "refund request",
+    "action": "final",
+    "tool_called": false,
+    "tool_result": null,
+    "final_decision": "Need order ID",
+    "confidence": 0.8,
+    "escalation": false
+  },
+  {
+    "ticket_id": 18,
+    "user_query": "refund for ORD-777",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "eligible"
+    },
+    "final_decision": "Refund eligible",
+    "confidence": 0.9,
+    "escalation": false
+  },
+  {
+    "ticket_id": 19,
+    "user_query": "item defective",
+    "action": "escalate_ticket",
+    "tool_called": true,
+    "tool_result": {
+      "status": "ticket_created"
+    },
+    "final_decision": "Escalated",
+    "confidence": 0.88,
+    "escalation": true
+  },
+  {
+    "ticket_id": 20,
+    "user_query": "refund ORD-888",
+    "action": "check_refund_eligibility",
+    "tool_called": true,
+    "tool_result": {
+      "status": "not eligible"
+    },
+    "final_decision": "Refund denied",
+    "confidence": 0.91,
+    "escalation": false
+  }
+]
