@@ -271,3 +271,4 @@ Built for Hackathon Project
 * Payment/refund tracking
 
 ---
+<img width="1536" height="1024" alt="Architecture" src="https://github.com/user-attachments/assets/6d43143a-58d0-41c6-9db4-7beaa27168d5" />
