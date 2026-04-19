@@ -7,9 +7,6 @@ chat_memory = {}
 
 
 def clean_llm_output(text: str):
-    """
-    Remove markdown formatting if present
-    """
     text = text.strip()
 
     if "```" in text:
@@ -18,18 +15,34 @@ def clean_llm_output(text: str):
     return text
 
 
-def run_agent(user_input: str, session_id: str = "default"):
+def run_agent(user_input: str, session_id: str = "default", external_data=None):
     try:
         # 🧠 Load memory
         history = chat_memory.get(session_id, [])
         history_text = "\n".join(history)
 
+        # 🔥 Inject uploaded JSON into context
+        data_context = ""
+        if external_data:
+            data_context = f"\nExternal Data:\n{json.dumps(external_data, indent=2)}\n"
+
         # 🔹 STEP 1 — Ask LLM what to do
         prompt = f"""
+You are an AI support agent.
+
 Conversation history:
 {history_text}
 
+{data_context}
+
 User: {user_input}
+
+Respond ONLY in JSON:
+{{
+  "action": "tool_name OR final",
+  "parameters": {{}},
+  "response": ""
+}}
 """
 
         raw_text = generate(prompt)
@@ -61,6 +74,8 @@ You are a customer support AI.
 Conversation history:
 {history_text}
 
+{data_context}
+
 User query:
 {user_input}
 
@@ -73,8 +88,7 @@ Rules:
 - Do NOT return JSON
 - Do NOT show raw data
 - Be clear and human-friendly
-- Follow company policy
-- If info missing → ask user
+- Use external data if useful
 """
 
             final_text = generate(final_prompt).strip()
@@ -113,7 +127,7 @@ Rules:
         # 🔥 FINAL OUTPUT
         return {
             "response": final_text,
-            "confidence": 0.8,  # static for now (no extra API call)
+            "confidence": 0.8,
             "escalation": escalation_data
         }
 
